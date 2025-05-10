@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx serverless offline"
+    "dev": "npx serverless offline",
+    "deploy": "npx serverless deploy"
   },
   "keywords": [],
   "author": "",

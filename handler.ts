@@ -9,7 +9,7 @@ export const connect = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  console.log("Connect event:", event);
+  console.log("Connect event requestContext:", event.requestContext);
   return {
     statusCode: 200,
     body: "Connected.",
@@ -20,7 +20,7 @@ export const disconnect = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  console.log("Disconnect event:", event);
+  console.log("Disconnect event requestContext:", event.requestContext);
   return {
     statusCode: 200,
     body: "Disconnected.",
@@ -31,7 +31,7 @@ export const defaultHandler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  console.log("Default event:", event);
+  // console.log("Default event:", event);
   return {
     statusCode: 200,
     body: "Default route.",
@@ -42,7 +42,8 @@ export const echoHandler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  console.log("Echo event:", event);
+  console.log("Echo event requestContext:", event.requestContext);
+  console.log("Echo event body:", event.body);
 
   const endpoint = process.env.IS_OFFLINE
     ? "http://localhost:3001"
