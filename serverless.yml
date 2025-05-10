@@ -28,3 +28,9 @@ functions:
     events:
       - websocket:
           route: $default
+
+  echoHandler:
+    handler: handler.echoHandler
+    events:
+      - websocket:
+          route: echo
