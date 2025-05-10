@@ -3,7 +3,11 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import AWS from "aws-sdk";
+import {
+  getApiGatewayManagementApi,
+  parseMessageData,
+  RESPONSE_MESSAGE_PREFIX,
+} from "../utils/echoUtils";
 
 export const echoHandler = async (
   event: APIGatewayProxyEvent,
@@ -12,23 +16,13 @@ export const echoHandler = async (
   console.log("Echo event requestContext:", event.requestContext);
   console.log("Echo event body:", event.body);
 
-  const endpoint = process.env.IS_OFFLINE
-    ? "http://localhost:3001"
-    : "https://" +
-      event.requestContext.domainName +
-      "/" +
-      event.requestContext.stage;
-  const apigwManagementApi = new AWS.ApiGatewayManagementApi({
-    apiVersion: "2018-11-29",
-    endpoint: endpoint,
-  });
+  const apigwManagementApi = getApiGatewayManagementApi(event);
 
   const connectionId = event.requestContext.connectionId;
 
   let messageData: string;
   try {
-    const body = JSON.parse(event.body || "{}");
-    messageData = body.data || "";
+    messageData = parseMessageData(event);
   } catch (err) {
     console.error("Failed to parse message body", err);
     return {
@@ -37,7 +31,7 @@ export const echoHandler = async (
     };
   }
 
-  const responseMessage = "from server: " + messageData;
+  const responseMessage = RESPONSE_MESSAGE_PREFIX + messageData;
 
   try {
     await apigwManagementApi
