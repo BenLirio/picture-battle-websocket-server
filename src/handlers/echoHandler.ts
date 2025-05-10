@@ -5,39 +5,6 @@ import {
 } from "aws-lambda";
 import AWS from "aws-sdk";
 
-export const connect = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  console.log("Connect event requestContext:", event.requestContext);
-  return {
-    statusCode: 200,
-    body: "Connected.",
-  };
-};
-
-export const disconnect = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  console.log("Disconnect event requestContext:", event.requestContext);
-  return {
-    statusCode: 200,
-    body: "Disconnected.",
-  };
-};
-
-export const defaultHandler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  // console.log("Default event:", event);
-  return {
-    statusCode: 200,
-    body: "Default route.",
-  };
-};
-
 export const echoHandler = async (
   event: APIGatewayProxyEvent,
   context: Context

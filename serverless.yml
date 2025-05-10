@@ -12,25 +12,25 @@ plugins:
 
 functions:
   connectHandler:
-    handler: handler.connect
+    handler: src/handlers/index.connect
     events:
       - websocket:
           route: $connect
 
   disconnectHandler:
-    handler: handler.disconnect
+    handler: src/handlers/index.disconnect
     events:
       - websocket:
           route: $disconnect
 
   defaultHandler:
-    handler: handler.defaultHandler
+    handler: src/handlers/index.defaultHandler
     events:
       - websocket:
           route: $default
 
   echoHandler:
-    handler: handler.echoHandler
+    handler: src/handlers/index.echoHandler
     events:
       - websocket:
           route: echo
