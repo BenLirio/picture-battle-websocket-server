@@ -24,7 +24,7 @@ functions:
           route: $disconnect
 
   defaultHandler:
-    handler: handler.default
+    handler: handler.defaultHandler
     events:
       - websocket:
           route: $default
