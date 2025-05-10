@@ -6,6 +6,9 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
+  environment:
+    GAME_TABLE_NAME: picture-battle-games
+    CONNECTION_TABLE_NAME: picture-battle-connections
 
 plugins:
   - serverless-offline
@@ -34,3 +37,9 @@ functions:
     events:
       - websocket:
           route: echo
+
+  createGameHandler:
+    handler: src/handlers/index.createGameHandler
+    events:
+      - websocket:
+          route: createGame
