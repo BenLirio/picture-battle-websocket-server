@@ -13,5 +13,11 @@ export const GameSchema = z.object({
   settings: z.object({
     maxPlayers: z.number().min(2).max(2),
   }),
+  characters: z.array(
+    z.object({
+      playerId: z.string().uuid(),
+      characterId: z.string().uuid(),
+    })
+  ),
 });
 export type Game = z.infer<typeof GameSchema>;
