@@ -13,6 +13,7 @@ import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
 import { connectionDatabase } from "../database/connectionDatabase";
 import { Socket } from "../connections/Socket";
+import { GameSocket } from "../connections/GameSocket";
 
 const JoinGameRequestSchema = z.object({
   action: z.literal("joinGame"),
@@ -38,6 +39,8 @@ export const joinGameHandler = withErrorHandling(
     if (!game) {
       return errorResponse("Game not found.");
     }
+    const gameSocket: GameSocket = new GameSocket(event, game);
+
     const player = await playerDatabase.get(playerId);
     if (!player) {
       return errorResponse("Player not found.");
@@ -61,25 +64,16 @@ export const joinGameHandler = withErrorHandling(
     if (game.settings.maxPlayers === game.playerIds.length) {
       game.state = "SELECTING_CHARACTERS";
       game.canAct = [...game.playerIds]; // Add both player IDs to canAct
-      const connectionIds = await connectionDatabase.listIds();
-      for (const connectionId of connectionIds) {
-        await socket.sendMessage(connectionId, {
-          type: "game_no_longer_available",
-          gameId: game.id,
-        });
-      }
+      await socket.broadcastToConnections({
+        type: "game_no_longer_available",
+        gameId: game.id,
+      });
     }
-    for (const playerId of game.playerIds) {
-      const player = await playerDatabase.get(playerId);
-      if (player) {
-        for (const connectionId of player.connectionIds) {
-          await socket.sendMessage(connectionId, {
-            type: "set_game",
-            data: { game: game },
-          });
-        }
-      }
-    }
+
+    await gameSocket.broadcastToGame({
+      type: "set_game",
+      data: { game },
+    });
     await gameDatabase.update(game);
 
     return successResponse("Game joined successfully.");

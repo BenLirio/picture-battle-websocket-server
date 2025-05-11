@@ -14,6 +14,7 @@ import { playerDatabase } from "../database/playerDatabase";
 import { characterDatabase } from "../database/characterDatabase";
 import { v4 as uuidv4 } from "uuid";
 import { Socket } from "../connections/Socket";
+import { GameSocket } from "../connections/GameSocket";
 
 const SelectCharacterRequestSchema = z.object({
   action: z.literal("selectCharacter"),
@@ -40,6 +41,7 @@ export const selectCharacterHandler = withErrorHandling(
     if (!game) {
       return errorResponse("Game not found.");
     }
+    const gameSocket = new GameSocket(event, game);
 
     const player = await playerDatabase.get(playerId);
     if (!player) {
@@ -97,19 +99,10 @@ export const selectCharacterHandler = withErrorHandling(
     }
 
     await gameDatabase.update(game);
-
-    // Send updated game state to all players in the game
-    for (const pId of game.playerIds) {
-      const gamePlayer = await playerDatabase.get(pId);
-      if (gamePlayer) {
-        for (const connId of gamePlayer.connectionIds) {
-          await socket.sendMessage(connId, {
-            type: "set_game",
-            data: { game },
-          });
-        }
-      }
-    }
+    await gameSocket.broadcastToGame({
+      type: "set_game",
+      data: { game },
+    });
 
     return successResponse("Character selected successfully.");
   }

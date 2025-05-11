@@ -3,6 +3,7 @@ import { gameDatabase, playerDatabase } from "../database";
 import { successResponse, errorResponse } from "../utils/responseUtils";
 import { z } from "zod";
 import { Socket } from "../connections/Socket";
+import { GameSocket } from "../connections/GameSocket";
 
 const DoActionInputSchema = z.object({
   action: z.literal("doAction"),
@@ -35,41 +36,26 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
       });
       return errorResponse("Game not found");
     }
+    const gameSocket: GameSocket = new GameSocket(event, game);
 
     // Verify player exists
     const player = await playerDatabase.get(playerId);
     if (!player) {
-      await socket.sendMessage(connectionId, {
-        action: "error",
-        message: "Player not found",
-      });
       return errorResponse("Player not found");
     }
 
     // Verify player token matches
     if (player.token !== playerToken) {
-      await socket.sendMessage(connectionId, {
-        action: "error",
-        message: "Invalid player token",
-      });
       return errorResponse("Invalid player token");
     }
 
     // Verify player is in the game
     if (!game.playerIds.includes(playerId)) {
-      await socket.sendMessage(connectionId, {
-        action: "error",
-        message: "Player is not in this game",
-      });
       return errorResponse("Player is not in this game");
     }
 
     // Verify player is in the canAct list
     if (!game.canAct.includes(playerId)) {
-      await socket.sendMessage(connectionId, {
-        action: "error",
-        message: "It is not your turn to act",
-      });
       return errorResponse("It is not your turn to act");
     }
 
@@ -86,17 +72,10 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
     }
 
     await gameDatabase.update(game);
-    for (const playerId of game.playerIds) {
-      const player = await playerDatabase.get(playerId);
-      if (player) {
-        for (const connectionId of player.connectionIds) {
-          await socket.sendMessage(connectionId, {
-            type: "set_game",
-            data: { game: game },
-          });
-        }
-      }
-    }
+    await gameSocket.broadcastToGame({
+      type: "set_game",
+      data: { game: game },
+    });
 
     return successResponse("Action received");
   } catch (error) {

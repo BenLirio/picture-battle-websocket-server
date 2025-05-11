@@ -32,4 +32,13 @@ export class Socket {
       }
     }
   }
+
+  public async broadcastToConnections(data: any): Promise<void> {
+    const connectionIds = await connectionDatabase.listIds();
+    await Promise.all(
+      connectionIds.map(async (connectionId) => {
+        await this.sendMessage(connectionId, data);
+      })
+    );
+  }
 }

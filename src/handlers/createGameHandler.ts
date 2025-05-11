@@ -28,14 +28,10 @@ export const createGameHandler = withErrorHandling(
       canAct: [],
     };
     await gameDatabase.create(game);
-    const connectionIds = await connectionDatabase.listIds();
-
-    for (const connectionId of connectionIds) {
-      await socket.sendMessage(connectionId, {
-        type: "game_created",
-        gameId: game.id,
-      });
-    }
+    await socket.broadcastToConnections({
+      type: "game_created",
+      gameId: game.id,
+    });
 
     return successResponse("Game created successfully.");
   }
