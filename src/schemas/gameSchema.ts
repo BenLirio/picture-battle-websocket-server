@@ -4,6 +4,7 @@ export const GameStateSchema = z.enum([
   "WAITING_FOR_PLAYERS",
   "SELECTING_CHARACTERS",
   "GAME_LOOP",
+  "GAME_OVER",
 ]);
 export type GameState = z.infer<typeof GameStateSchema>;
 

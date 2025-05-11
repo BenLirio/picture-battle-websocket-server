@@ -81,6 +81,12 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
     }
     const nextPlayerId = game.playerIds.find((id) => id !== playerId)!;
     game.canAct = [nextPlayerId];
+
+    if (action === "win") {
+      game.state = "GAME_OVER";
+      game.canAct = [];
+    }
+
     await gameDatabase.update(game);
     for (const playerId of game.playerIds) {
       const player = await playerDatabase.get(playerId);
@@ -93,19 +99,6 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
         }
       }
     }
-
-    // Update game state with the next player's turn
-    // This part needs actual game state update logic, for now just console log
-    console.log(`Incrementing turn. Next player to act: ${nextPlayerId}`);
-
-    // TODO: Implement action performance logic here
-
-    // For now, just send a success message back
-    await sendMessageToClient(event, connectionId, {
-      action: "actionPerformed",
-      message:
-        "Action received and turn incremented (action not fully implemented)",
-    });
 
     return successResponse("Action received");
   } catch (error) {
