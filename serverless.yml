@@ -50,3 +50,9 @@ functions:
     events:
       - websocket:
           route: joinGame
+
+  selectCharacterHandler:
+    handler: src/handlers/index.selectCharacterHandler
+    events:
+      - websocket:
+          route: selectCharacter

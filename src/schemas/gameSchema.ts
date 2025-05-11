@@ -3,6 +3,7 @@ import { z } from "zod";
 export const GameStateSchema = z.enum([
   "WAITING_FOR_PLAYERS",
   "SELECTING_CHARACTERS",
+  "GAME_LOOP",
 ]);
 export type GameState = z.infer<typeof GameStateSchema>;
 
