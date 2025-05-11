@@ -17,6 +17,7 @@ export const initHandler = async (
   const player: Player = {
     id: uuidv4(),
     connectionIds: [connectionId],
+    token: uuidv4(),
   };
   await playerDatabase.create(player);
   const gameIds = await gameDatabase.listIds({
@@ -32,9 +33,10 @@ export const initHandler = async (
     .postToConnection({
       ConnectionId: connectionId,
       Data: JSON.stringify({
-        type: "set_player_id",
+        type: "set_player",
         data: {
           playerId: player.id,
+          token: player.token,
         },
       }),
     })
