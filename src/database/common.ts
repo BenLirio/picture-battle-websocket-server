@@ -38,11 +38,43 @@ export class DatabaseClient<T> {
     return parseResult.data;
   }
 
-  async listIds(): Promise<string[]> {
-    const params = {
+  async listIds(filter?: {
+    attributeName: string;
+    condition: "Equal to" | "Not Equal to";
+    type: "String" | "Number";
+    value: string;
+  }): Promise<string[]> {
+    let params: AWS.DynamoDB.DocumentClient.ScanInput = {
       TableName: this.tableName,
       ProjectionExpression: "id",
     };
+
+    if (filter) {
+      const attributePlaceholder = "#attr";
+      const valuePlaceholder = ":val";
+
+      let operator = "=";
+      if (filter.condition === "Not Equal to") {
+        operator = "<>";
+      }
+
+      let value: any = filter.value;
+      if (filter.type === "Number") {
+        value = Number(filter.value);
+      }
+
+      params = {
+        ...params,
+        FilterExpression: `${attributePlaceholder} ${operator} ${valuePlaceholder}`,
+        ExpressionAttributeNames: {
+          [attributePlaceholder]: filter.attributeName,
+        },
+        ExpressionAttributeValues: {
+          [valuePlaceholder]: value,
+        },
+      };
+    }
+
     const result = await ddb.scan(params).promise();
     if (!result.Items) {
       return [];

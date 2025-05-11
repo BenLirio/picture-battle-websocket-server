@@ -19,7 +19,12 @@ export const initHandler = async (
     connectionIds: [connectionId],
   };
   await playerDatabase.create(player);
-  const gameIds = await gameDatabase.listIds();
+  const gameIds = await gameDatabase.listIds({
+    attributeName: "state",
+    condition: "Equal to",
+    type: "String",
+    value: "WAITING_FOR_PLAYERS",
+  });
 
   const apigwManagementApi = getApiGatewayManagementApi(event);
 

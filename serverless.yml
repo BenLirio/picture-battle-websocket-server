@@ -50,3 +50,9 @@ functions:
     events:
       - websocket:
           route: createGame
+
+  joinGameHandler:
+    handler: src/handlers/index.joinGameHandler
+    events:
+      - websocket:
+          route: joinGame
