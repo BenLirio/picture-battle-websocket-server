@@ -3,6 +3,11 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
+import {
+  successResponse,
+  errorResponse,
+  withErrorHandling,
+} from "../utils/responseUtils";
 import { z } from "zod";
 import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
@@ -19,78 +24,62 @@ const JoinGameRequestSchema = z.object({
 });
 type JoinGameRequest = z.infer<typeof JoinGameRequestSchema>;
 
-export const joinGameHandler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  const connectionId = event.requestContext.connectionId!;
-  const {
-    data: { gameId, playerId, playerToken },
-  } = JoinGameRequestSchema.parse(JSON.parse(event.body!));
-  const game = await gameDatabase.get(gameId);
-  if (!game) {
-    return {
-      statusCode: 400,
-      body: "Game not found.",
-    };
-  }
-  const player = await playerDatabase.get(playerId);
-  if (!player) {
-    return {
-      statusCode: 400,
-      body: "Player not found.",
-    };
-  }
-  if (player.token !== playerToken) {
-    return {
-      statusCode: 400,
-      body: "Invalid player token.",
-    };
-  }
-  if (!player.connectionIds.includes(connectionId)) {
-    player.connectionIds.push(connectionId);
-    await playerDatabase.update(player);
-  }
-
-  if (game.playerIds.includes(player.id)) {
-    return {
-      statusCode: 400,
-      body: "Player already in game.",
-    };
-  }
-  if (game.state !== "WAITING_FOR_PLAYERS") {
-    return {
-      statusCode: 400,
-      body: "Game is not in a state to join.",
-    };
-  }
-
-  game.playerIds.push(player.id);
-  if (game.settings.maxPlayers === game.playerIds.length) {
-    game.state = "SELECTING_CHARACTERS";
-    const connectionIds = await connectionDatabase.listIds();
-    for (const connectionId of connectionIds) {
-      await sendMessageToClient(event, connectionId, {
-        type: "game_no_longer_available",
-        gameId: game.id,
-      });
+export const joinGameHandler = withErrorHandling(
+  async (
+    event: APIGatewayProxyEvent,
+    context: Context
+  ): Promise<APIGatewayProxyResult> => {
+    const connectionId = event.requestContext.connectionId!;
+    const {
+      data: { gameId, playerId, playerToken },
+    } = JoinGameRequestSchema.parse(JSON.parse(event.body!));
+    const game = await gameDatabase.get(gameId);
+    if (!game) {
+      return errorResponse("Game not found.");
     }
-  }
-  for (const playerId of game.playerIds) {
     const player = await playerDatabase.get(playerId);
-    if (player) {
-      for (const connectionId of player.connectionIds) {
+    if (!player) {
+      return errorResponse("Player not found.");
+    }
+    if (player.token !== playerToken) {
+      return errorResponse("Invalid player token.");
+    }
+    if (!player.connectionIds.includes(connectionId)) {
+      player.connectionIds.push(connectionId);
+      await playerDatabase.update(player);
+    }
+
+    if (game.playerIds.includes(player.id)) {
+      return errorResponse("Player already in game.");
+    }
+    if (game.state !== "WAITING_FOR_PLAYERS") {
+      return errorResponse("Game is not in a state to join.");
+    }
+
+    game.playerIds.push(player.id);
+    if (game.settings.maxPlayers === game.playerIds.length) {
+      game.state = "SELECTING_CHARACTERS";
+      const connectionIds = await connectionDatabase.listIds();
+      for (const connectionId of connectionIds) {
         await sendMessageToClient(event, connectionId, {
-          type: "set_game",
-          data: { game: game },
+          type: "game_no_longer_available",
+          gameId: game.id,
         });
       }
     }
-  }
-  await gameDatabase.update(game);
+    for (const playerId of game.playerIds) {
+      const player = await playerDatabase.get(playerId);
+      if (player) {
+        for (const connectionId of player.connectionIds) {
+          await sendMessageToClient(event, connectionId, {
+            type: "set_game",
+            data: { game: game },
+          });
+        }
+      }
+    }
+    await gameDatabase.update(game);
 
-  return {
-    statusCode: 200,
-    body: "Game joined successfully.",
-  };
-};
+    return successResponse("Game joined successfully.");
+  }
+);
