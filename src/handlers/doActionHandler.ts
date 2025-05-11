@@ -65,9 +65,18 @@ export const doActionHandler = withErrorHandling(
     const nextPlayerId = game.playerIds.find((id) => id !== playerId)!;
     game.canAct = [nextPlayerId];
 
+    game.messages.push({
+      from: playerId,
+      message: action,
+    });
+
     if (action === "win") {
       game.state = "GAME_OVER";
       game.canAct = [];
+      game.messages.push({
+        from: game.id,
+        message: `Player ${playerId} has won the game!`,
+      });
     }
 
     await gameDatabase.update(game);

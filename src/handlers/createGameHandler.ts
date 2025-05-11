@@ -26,6 +26,7 @@ export const createGameHandler = withErrorHandling(
       },
       characters: [],
       canAct: [],
+      messages: [],
     };
     await gameDatabase.create(game);
     await socket.broadcastToConnections({

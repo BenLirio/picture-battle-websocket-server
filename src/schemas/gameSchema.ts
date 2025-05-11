@@ -1,3 +1,4 @@
+import { text } from "stream/consumers";
 import { z } from "zod";
 
 export const GameStateSchema = z.enum([
@@ -22,5 +23,11 @@ export const GameSchema = z.object({
     })
   ),
   canAct: z.array(z.string().uuid()),
+  messages: z.array(
+    z.object({
+      from: z.string().uuid(),
+      message: z.string(),
+    })
+  ),
 });
 export type Game = z.infer<typeof GameSchema>;

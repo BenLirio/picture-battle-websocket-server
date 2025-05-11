@@ -14,6 +14,7 @@ import { playerDatabase } from "../database/playerDatabase";
 import { connectionDatabase } from "../database/connectionDatabase";
 import { Socket } from "../connections/Socket";
 import { GameSocket } from "../connections/GameSocket";
+import { generateGameScene } from "../ai/mockAi";
 
 const JoinGameRequestSchema = z.object({
   action: z.literal("joinGame"),
@@ -61,12 +62,25 @@ export const joinGameHandler = withErrorHandling(
     }
 
     game.playerIds.push(player.id);
+    game.messages.push({
+      from: game.id,
+      message: `Player ${player.id} has joined.`,
+    });
     if (game.settings.maxPlayers === game.playerIds.length) {
       game.state = "SELECTING_CHARACTERS";
       game.canAct = [...game.playerIds]; // Add both player IDs to canAct
       await socket.broadcastToConnections({
         type: "game_no_longer_available",
         gameId: game.id,
+      });
+      game.messages.push({
+        from: game.id,
+        message: `Game is full. Starting character selection.`,
+      });
+      const scene = await generateGameScene();
+      game.messages.push({
+        from: game.id,
+        message: `The scene for this duel is: ${scene}`,
       });
     }
 

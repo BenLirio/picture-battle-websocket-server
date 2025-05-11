@@ -15,6 +15,7 @@ import { characterDatabase } from "../database/characterDatabase";
 import { v4 as uuidv4 } from "uuid";
 import { Socket } from "../connections/Socket";
 import { GameSocket } from "../connections/GameSocket";
+import { generateGameScene } from "../ai/mockAi";
 
 const SelectCharacterRequestSchema = z.object({
   action: z.literal("selectCharacter"),
@@ -83,6 +84,10 @@ export const selectCharacterHandler = withErrorHandling(
     };
 
     await characterDatabase.create(newCharacter);
+    game.messages.push({
+      from: game.id,
+      message: `Player ${playerId} has selected character "${characterName}".`,
+    });
 
     // Add new selection
     game.characters.push({ playerId, characterId: newCharacterId });
@@ -91,9 +96,14 @@ export const selectCharacterHandler = withErrorHandling(
     game.canAct = game.canAct.filter((id) => id !== playerId);
 
     // Check if all players have selected a character
-    if (game.characters.length === game.playerIds.length) {
+    const inGameLoop = game.characters.length === game.playerIds.length;
+    if (inGameLoop) {
       game.state = "GAME_LOOP";
-      // Add a random player to canAct
+      game.messages.push({
+        from: game.id,
+        message:
+          "All players have selected their characters. The game is starting...",
+      });
       const randomIndex = Math.floor(Math.random() * game.playerIds.length);
       game.canAct = [game.playerIds[randomIndex]];
     }
