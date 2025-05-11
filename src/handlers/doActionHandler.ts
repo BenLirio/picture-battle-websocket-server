@@ -62,13 +62,15 @@ export const doActionHandler = withErrorHandling(
     if (game.settings.maxPlayers !== 2 || game.playerIds.length !== 2) {
       return errorResponse("Invalid game state for action");
     }
-    const nextPlayerId = game.playerIds.find((id) => id !== playerId)!;
-    game.canAct = [nextPlayerId];
 
     game.messages.push({
       from: playerId,
       message: action,
     });
+    await gameSocket.updateGame();
+
+    const nextPlayerId = game.playerIds.find((id) => id !== playerId)!;
+    game.canAct = [nextPlayerId];
 
     if (action === "win") {
       game.state = "GAME_OVER";
@@ -79,11 +81,8 @@ export const doActionHandler = withErrorHandling(
       });
     }
 
+    await gameSocket.updateGame();
     await gameDatabase.update(game);
-    await gameSocket.broadcastToGame({
-      type: "set_game",
-      data: { game: game },
-    });
 
     return successResponse("Action received");
   }

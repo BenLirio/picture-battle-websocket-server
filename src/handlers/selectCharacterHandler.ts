@@ -83,17 +83,13 @@ export const selectCharacterHandler = withErrorHandling(
       description: characterName,
     };
 
-    await characterDatabase.create(newCharacter);
+    game.canAct = game.canAct.filter((id) => id !== playerId);
     game.messages.push({
       from: game.id,
       message: `Player ${playerId} has selected character "${characterName}".`,
     });
-
-    // Add new selection
     game.characters.push({ playerId, characterId: newCharacterId });
-
-    // Remove player from canAct after successful selection
-    game.canAct = game.canAct.filter((id) => id !== playerId);
+    gameSocket.updateGame();
 
     // Check if all players have selected a character
     const inGameLoop = game.characters.length === game.playerIds.length;
@@ -106,13 +102,11 @@ export const selectCharacterHandler = withErrorHandling(
       });
       const randomIndex = Math.floor(Math.random() * game.playerIds.length);
       game.canAct = [game.playerIds[randomIndex]];
+      await gameSocket.updateGame();
     }
 
     await gameDatabase.update(game);
-    await gameSocket.broadcastToGame({
-      type: "set_game",
-      data: { game },
-    });
+    await characterDatabase.create(newCharacter);
 
     return successResponse("Character selected successfully.");
   }

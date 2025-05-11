@@ -25,4 +25,11 @@ export class GameSocket {
       })
     );
   }
+
+  public async updateGame() {
+    await this.broadcastToGame({
+      type: "set_game",
+      data: { game: this.game },
+    });
+  }
 }

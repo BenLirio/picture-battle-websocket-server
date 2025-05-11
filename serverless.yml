@@ -17,48 +17,72 @@ plugins:
 functions:
   connectHandler:
     handler: src/handlers/index.connect
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: $connect
 
   disconnectHandler:
     handler: src/handlers/index.disconnect
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: $disconnect
 
   defaultHandler:
     handler: src/handlers/index.defaultHandler
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: $default
 
   initHandler:
     handler: src/handlers/index.initHandler
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: init
 
   createGameHandler:
     handler: src/handlers/index.createGameHandler
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: createGame
 
   joinGameHandler:
     handler: src/handlers/index.joinGameHandler
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: joinGame
 
   selectCharacterHandler:
     handler: src/handlers/index.selectCharacterHandler
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: selectCharacter
 
   doActionHandler:
     handler: src/handlers/index.doActionHandler
+    environment:
+      GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    timeout: 29
     events:
       - websocket:
           route: doAction
