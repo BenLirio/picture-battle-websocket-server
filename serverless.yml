@@ -33,12 +33,6 @@ functions:
       - websocket:
           route: $default
 
-  echoHandler:
-    handler: src/handlers/index.echoHandler
-    events:
-      - websocket:
-          route: echo
-
   initHandler:
     handler: src/handlers/index.initHandler
     events:

@@ -6,8 +6,8 @@ import {
 import { Game } from "../schemas/gameSchema";
 import { v4 as uuidv4 } from "uuid";
 import { gameDatabase } from "../database/gameDatabase";
-import { getApiGatewayManagementApi } from "../utils/echoUtils";
 import { connectionDatabase } from "../database/connectionDatabase";
+import { sendMessageToClient } from "../utils/messageUtils";
 
 export const createGameHandler = async (
   event: APIGatewayProxyEvent,
@@ -23,43 +23,15 @@ export const createGameHandler = async (
     },
   };
   await gameDatabase.create(game);
-  const apigwManagementApi = getApiGatewayManagementApi(event);
   const connectionIds = await connectionDatabase.listIds();
   console.log(`Connection IDs: ${connectionIds}`);
 
-  await Promise.all(
-    connectionIds.map(async (connectionId) => {
-      console.log(
-        `Sending game_created event to connectionId: ${connectionId}`
-      );
-      try {
-        await apigwManagementApi
-          .postToConnection({
-            ConnectionId: connectionId,
-            Data: JSON.stringify({
-              type: "game_created",
-              gameId: game.id,
-            }),
-          })
-          .promise();
-        console.log(
-          `Successfully sent game_created event to connectionId: ${connectionId}`
-        );
-      } catch (error: any) {
-        if (error.statusCode === 410) {
-          console.log(
-            `Connection ${connectionId} is stale and has been deleted.`
-          );
-          await connectionDatabase.delete(connectionId);
-        } else {
-          console.error(
-            `Failed to send game_created event to connectionId: ${connectionId}`,
-            error
-          );
-        }
-      }
-    })
-  );
+  for (const connectionId of connectionIds) {
+    await sendMessageToClient(event, connectionId, {
+      type: "game_created",
+      gameId: game.id,
+    });
+  }
 
   return {
     statusCode: 200,

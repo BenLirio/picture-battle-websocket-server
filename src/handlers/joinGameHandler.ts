@@ -7,7 +7,7 @@ import { z } from "zod";
 import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
 import { connectionDatabase } from "../database/connectionDatabase";
-import { getApiGatewayManagementApi } from "../utils/echoUtils";
+import { sendMessageToClient } from "../utils/messageUtils";
 
 const JoinGameRequestSchema = z.object({
   action: z.literal("joinGame"),
@@ -66,72 +66,27 @@ export const joinGameHandler = async (
   }
 
   game.playerIds.push(player.id);
-  const apigwManagementApi = getApiGatewayManagementApi(event);
   if (game.settings.maxPlayers === game.playerIds.length) {
     game.state = "SELECTING_CHARACTERS";
     const connectionIds = await connectionDatabase.listIds();
-    await Promise.all(
-      connectionIds.map(async (connectionId) => {
-        try {
-          await apigwManagementApi
-            .postToConnection({
-              ConnectionId: connectionId,
-              Data: JSON.stringify({
-                type: "game_no_longer_available",
-                gameId: game.id,
-              }),
-            })
-            .promise();
-        } catch (error: any) {
-          if (error.statusCode === 410) {
-            console.log(
-              `Connection ${connectionId} is stale and has been deleted.`
-            );
-            await connectionDatabase.delete(connectionId);
-          } else {
-            console.error(
-              `Failed to send game_no_longer_available event to connectionId: ${connectionId}`,
-              error
-            );
-          }
-        }
-      })
-    );
+    for (const connectionId of connectionIds) {
+      await sendMessageToClient(event, connectionId, {
+        type: "game_no_longer_available",
+        gameId: game.id,
+      });
+    }
   }
-  await Promise.all(
-    game.playerIds.map(async (playerId) => {
-      const player = await playerDatabase.get(playerId);
-      if (player) {
-        await Promise.all(
-          player.connectionIds.map(async (connectionId) => {
-            try {
-              await apigwManagementApi
-                .postToConnection({
-                  ConnectionId: connectionId,
-                  Data: JSON.stringify({
-                    type: "set_game",
-                    data: { game: game },
-                  }),
-                })
-                .promise();
-            } catch (error: any) {
-              if (error.statusCode === 410) {
-                console.log(
-                  `Connection ${connectionId} is stale and has been deleted.`
-                );
-                await connectionDatabase.delete(connectionId);
-              } else {
-                console.error(
-                  `Failed to send set_game event to connectionId: ${connectionId}`,
-                  error
-                );
-              }
-            }
-          })
-        );
+  for (const playerId of game.playerIds) {
+    const player = await playerDatabase.get(playerId);
+    if (player) {
+      for (const connectionId of player.connectionIds) {
+        await sendMessageToClient(event, connectionId, {
+          type: "set_game",
+          data: { game: game },
+        });
       }
-    })
-  );
+    }
+  }
   await gameDatabase.update(game);
 
   return {

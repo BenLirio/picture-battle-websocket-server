@@ -4,10 +4,10 @@ import {
   Context,
 } from "aws-lambda";
 import { gameDatabase } from "../database/gameDatabase";
-import { getApiGatewayManagementApi } from "../utils/echoUtils";
 import { playerDatabase } from "../database/playerDatabase";
 import { v4 as uuidv4 } from "uuid";
 import { Player } from "../schemas/playerSchema";
+import { sendMessageToClient } from "../utils/messageUtils";
 
 export const initHandler = async (
   event: APIGatewayProxyEvent,
@@ -27,32 +27,20 @@ export const initHandler = async (
     value: "WAITING_FOR_PLAYERS",
   });
 
-  const apigwManagementApi = getApiGatewayManagementApi(event);
+  await sendMessageToClient(event, connectionId, {
+    type: "set_player",
+    data: {
+      playerId: player.id,
+      token: player.token,
+    },
+  });
 
-  await apigwManagementApi
-    .postToConnection({
-      ConnectionId: connectionId,
-      Data: JSON.stringify({
-        type: "set_player",
-        data: {
-          playerId: player.id,
-          token: player.token,
-        },
-      }),
-    })
-    .promise();
-
-  await apigwManagementApi
-    .postToConnection({
-      ConnectionId: connectionId,
-      Data: JSON.stringify({
-        type: "game_ids",
-        data: {
-          gameIds,
-        },
-      }),
-    })
-    .promise();
+  await sendMessageToClient(event, connectionId, {
+    type: "game_ids",
+    data: {
+      gameIds,
+    },
+  });
 
   return {
     statusCode: 200,
