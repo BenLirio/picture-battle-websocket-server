@@ -16,7 +16,7 @@ export const connect = async (
     id: connectionId,
     createdAt: new Date().toISOString(),
   };
-  await connectionDatabase.createConnection(connection);
+  await connectionDatabase.create(connection);
   return {
     statusCode: 200,
     body: "Connected.",

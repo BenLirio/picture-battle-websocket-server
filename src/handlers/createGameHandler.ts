@@ -19,9 +19,9 @@ export const createGameHandler = async (
     playerIds: [],
     state: "WAITING_FOR_PLAYERS",
   };
-  await gameDatabase.createGame(game);
+  await gameDatabase.create(game);
   const apigwManagementApi = getApiGatewayManagementApi(event);
-  const connectionIds = await connectionDatabase.listConnectionIds();
+  const connectionIds = await connectionDatabase.listIds();
   console.log(`Connection IDs: ${connectionIds}`);
 
   await Promise.all(
@@ -47,7 +47,7 @@ export const createGameHandler = async (
           console.log(
             `Connection ${connectionId} is stale and has been deleted.`
           );
-          await connectionDatabase.deleteConnection(connectionId);
+          await connectionDatabase.delete(connectionId);
         } else {
           console.error(
             `Failed to send game_created event to connectionId: ${connectionId}`,

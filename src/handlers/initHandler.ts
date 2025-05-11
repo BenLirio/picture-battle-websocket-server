@@ -3,13 +3,8 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import { connectionDatabase } from "../database/connectionDatabase";
-import { Connection } from "../schemas/connectionSchema";
 import { gameDatabase } from "../database/gameDatabase";
-import {
-  getApiGatewayManagementApi,
-  RESPONSE_MESSAGE_PREFIX,
-} from "../utils/echoUtils";
+import { getApiGatewayManagementApi } from "../utils/echoUtils";
 import { playerDatabase } from "../database/playerDatabase";
 import { v4 as uuidv4 } from "uuid";
 import { Player } from "../schemas/playerSchema";
@@ -23,8 +18,8 @@ export const initHandler = async (
     id: uuidv4(),
     connectionIds: [connectionId],
   };
-  await playerDatabase.createPlayer(player);
-  const gameIds = await gameDatabase.listGameIds();
+  await playerDatabase.create(player);
+  const gameIds = await gameDatabase.listIds();
 
   const apigwManagementApi = getApiGatewayManagementApi(event);
 

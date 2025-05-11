@@ -13,7 +13,7 @@ export const disconnect = async (
   const connectionId = event.requestContext.connectionId;
   if (connectionId) {
     try {
-      await connectionDatabase.deleteConnection(connectionId);
+      await connectionDatabase.delete(connectionId);
       console.log(`Deleted connection with id: ${connectionId}`);
     } catch (error) {
       console.error(
