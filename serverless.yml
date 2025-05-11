@@ -56,3 +56,9 @@ functions:
     events:
       - websocket:
           route: selectCharacter
+
+  doActionHandler:
+    handler: src/handlers/index.doActionHandler
+    events:
+      - websocket:
+          route: doAction
