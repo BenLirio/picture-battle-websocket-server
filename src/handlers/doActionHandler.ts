@@ -1,6 +1,10 @@
 import { APIGatewayEvent } from "aws-lambda";
 import { gameDatabase, playerDatabase } from "../database";
-import { successResponse, errorResponse } from "../utils/responseUtils";
+import {
+  successResponse,
+  errorResponse,
+  withErrorHandling,
+} from "../utils/responseUtils";
 import { z } from "zod";
 import { Socket } from "../connections/Socket";
 import { GameSocket } from "../connections/GameSocket";
@@ -15,25 +19,20 @@ const DoActionInputSchema = z.object({
   }),
 });
 
-export const doActionHandler = async (event: APIGatewayEvent) => {
-  const {
-    data: { gameId, playerId, playerToken, action },
-  } = DoActionInputSchema.parse(JSON.parse(event.body!));
-  const socket: Socket = new Socket(event);
-  const connectionId = event.requestContext.connectionId;
+export const doActionHandler = withErrorHandling(
+  async (event: APIGatewayEvent) => {
+    const {
+      data: { gameId, playerId, playerToken, action },
+    } = DoActionInputSchema.parse(JSON.parse(event.body!));
+    const connectionId = event.requestContext.connectionId;
 
-  if (!connectionId) {
-    return errorResponse("Internal server error");
-  }
+    if (!connectionId) {
+      return errorResponse("Internal server error");
+    }
 
-  try {
     // Verify game exists
     const game = await gameDatabase.get(gameId);
     if (!game) {
-      await socket.sendMessage(connectionId, {
-        action: "error",
-        message: "Game not found",
-      });
       return errorResponse("Game not found");
     }
     const gameSocket: GameSocket = new GameSocket(event, game);
@@ -78,12 +77,5 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
     });
 
     return successResponse("Action received");
-  } catch (error) {
-    console.error("Error performing action:", error);
-    await socket.sendMessage(connectionId, {
-      action: "error",
-      message: "Error performing action",
-    });
-    return errorResponse("Error performing action");
   }
-};
+);
