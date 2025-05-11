@@ -9,6 +9,7 @@ provider:
   environment:
     GAME_TABLE_NAME: picture-battle-games
     CONNECTION_TABLE_NAME: picture-battle-connections
+    PLAYER_TABLE_NAME: picture-battle-players
 
 plugins:
   - serverless-offline

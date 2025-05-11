@@ -4,7 +4,7 @@ import {
   Context,
 } from "aws-lambda";
 import { connectionDatabase } from "../database/connectionDatabase";
-import { Connection } from "../schemas/connection";
+import { Connection } from "../schemas/connectionSchema";
 
 export const connect = async (
   event: APIGatewayProxyEvent,

@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { Connection, ConnectionSchema } from "../schemas/connection";
+import { Connection, ConnectionSchema } from "../schemas/connectionSchema";
 
 const ddb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.CONNECTION_TABLE_NAME!;

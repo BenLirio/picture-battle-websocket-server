@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { Game, GameSchema } from "../schemas/game";
+import { Game, GameSchema } from "../schemas/gameSchema";
 
 const ddb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.GAME_TABLE_NAME!;

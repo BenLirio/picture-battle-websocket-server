@@ -3,7 +3,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import { Game } from "../schemas/game";
+import { Game } from "../schemas/gameSchema";
 import { v4 as uuidv4 } from "uuid";
 import { gameDatabase } from "../database/gameDatabase";
 import { getApiGatewayManagementApi } from "../utils/echoUtils";
