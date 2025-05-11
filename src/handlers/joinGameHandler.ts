@@ -59,6 +59,7 @@ export const joinGameHandler = withErrorHandling(
     game.playerIds.push(player.id);
     if (game.settings.maxPlayers === game.playerIds.length) {
       game.state = "SELECTING_CHARACTERS";
+      game.canAct = [...game.playerIds]; // Add both player IDs to canAct
       const connectionIds = await connectionDatabase.listIds();
       for (const connectionId of connectionIds) {
         await sendMessageToClient(event, connectionId, {

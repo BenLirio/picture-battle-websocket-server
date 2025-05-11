@@ -54,6 +54,10 @@ export const selectCharacterHandler = withErrorHandling(
       return errorResponse("Player is not in this game.");
     }
 
+    if (!game.canAct.includes(playerId)) {
+      return errorResponse("Player is not allowed to act at this time.");
+    }
+
     if (game.state !== "SELECTING_CHARACTERS") {
       return errorResponse("Game is not in the character selection state.");
     }
@@ -81,9 +85,15 @@ export const selectCharacterHandler = withErrorHandling(
     // Add new selection
     game.characters.push({ playerId, characterId: newCharacterId });
 
+    // Remove player from canAct after successful selection
+    game.canAct = game.canAct.filter((id) => id !== playerId);
+
     // Check if all players have selected a character
     if (game.characters.length === game.playerIds.length) {
       game.state = "GAME_LOOP";
+      // Add a random player to canAct
+      const randomIndex = Math.floor(Math.random() * game.playerIds.length);
+      game.canAct = [game.playerIds[randomIndex]];
     }
 
     await gameDatabase.update(game);

@@ -20,5 +20,6 @@ export const GameSchema = z.object({
       characterId: z.string().uuid(),
     })
   ),
+  canAct: z.array(z.string().uuid()),
 });
 export type Game = z.infer<typeof GameSchema>;

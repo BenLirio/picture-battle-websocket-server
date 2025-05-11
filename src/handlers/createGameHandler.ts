@@ -28,6 +28,7 @@ export const createGameHandler = withErrorHandling(
         maxPlayers: 2,
       },
       characters: [],
+      canAct: [],
     };
     await gameDatabase.create(game);
     const connectionIds = await connectionDatabase.listIds();
