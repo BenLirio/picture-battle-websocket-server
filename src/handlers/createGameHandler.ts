@@ -3,11 +3,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandling,
-} from "../utils/responseUtils";
+import { successResponse, withErrorHandling } from "../utils/responseUtils";
 import { Game } from "../schemas/gameSchema";
 import { v4 as uuidv4 } from "uuid";
 import { gameDatabase } from "../database/gameDatabase";
@@ -32,7 +28,6 @@ export const createGameHandler = withErrorHandling(
     };
     await gameDatabase.create(game);
     const connectionIds = await connectionDatabase.listIds();
-    console.log(`Connection IDs: ${connectionIds}`);
 
     for (const connectionId of connectionIds) {
       await sendMessageToClient(event, connectionId, {

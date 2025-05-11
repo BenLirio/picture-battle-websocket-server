@@ -3,11 +3,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandling,
-} from "../utils/responseUtils";
+import { successResponse, withErrorHandling } from "../utils/responseUtils";
 import { connectionDatabase } from "../database/connectionDatabase";
 
 export const disconnect = withErrorHandling(
@@ -15,7 +11,6 @@ export const disconnect = withErrorHandling(
     event: APIGatewayProxyEvent,
     context: Context
   ): Promise<APIGatewayProxyResult> => {
-    console.log("Disconnect event requestContext:", event.requestContext);
     const connectionId = event.requestContext.connectionId;
     if (connectionId) {
       try {

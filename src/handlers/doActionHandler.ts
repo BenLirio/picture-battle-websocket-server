@@ -1,5 +1,5 @@
 import { APIGatewayEvent } from "aws-lambda";
-import { gameDatabase, playerDatabase, connectionDatabase } from "../database";
+import { gameDatabase, playerDatabase } from "../database";
 import { sendMessageToClient } from "../utils/messageUtils";
 import { successResponse, errorResponse } from "../utils/responseUtils";
 import { z } from "zod";
@@ -21,7 +21,6 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
   const connectionId = event.requestContext.connectionId;
 
   if (!connectionId) {
-    console.error("No connectionId in event");
     return errorResponse("Internal server error");
   }
 
@@ -72,8 +71,6 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
       });
       return errorResponse("It is not your turn to act");
     }
-
-    console.log("Performing action:", action);
 
     // Increment turn
     if (game.settings.maxPlayers !== 2 || game.playerIds.length !== 2) {

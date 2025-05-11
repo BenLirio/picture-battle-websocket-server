@@ -14,7 +14,6 @@ export const defaultHandler = withErrorHandling(
     event: APIGatewayProxyEvent,
     context: Context
   ): Promise<APIGatewayProxyResult> => {
-    console.log("Default event:", event);
     return successResponse("Default route.");
   }
 );

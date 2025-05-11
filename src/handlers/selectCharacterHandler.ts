@@ -24,7 +24,6 @@ const SelectCharacterRequestSchema = z.object({
     characterName: z.string(),
   }),
 });
-type SelectCharacterRequest = z.infer<typeof SelectCharacterRequestSchema>;
 
 export const selectCharacterHandler = withErrorHandling(
   async (
