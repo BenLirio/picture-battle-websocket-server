@@ -1,8 +1,8 @@
 import { APIGatewayEvent } from "aws-lambda";
 import { gameDatabase, playerDatabase } from "../database";
-import { sendMessageToClient } from "../utils/messageUtils";
 import { successResponse, errorResponse } from "../utils/responseUtils";
 import { z } from "zod";
+import { Socket } from "../socket/Socket";
 
 const DoActionInputSchema = z.object({
   action: z.literal("doAction"),
@@ -18,6 +18,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
   const {
     data: { gameId, playerId, playerToken, action },
   } = DoActionInputSchema.parse(JSON.parse(event.body!));
+  const socket: Socket = new Socket(event);
   const connectionId = event.requestContext.connectionId;
 
   if (!connectionId) {
@@ -28,7 +29,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
     // Verify game exists
     const game = await gameDatabase.get(gameId);
     if (!game) {
-      await sendMessageToClient(event, connectionId, {
+      await socket.sendMessage(connectionId, {
         action: "error",
         message: "Game not found",
       });
@@ -38,7 +39,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
     // Verify player exists
     const player = await playerDatabase.get(playerId);
     if (!player) {
-      await sendMessageToClient(event, connectionId, {
+      await socket.sendMessage(connectionId, {
         action: "error",
         message: "Player not found",
       });
@@ -47,7 +48,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
 
     // Verify player token matches
     if (player.token !== playerToken) {
-      await sendMessageToClient(event, connectionId, {
+      await socket.sendMessage(connectionId, {
         action: "error",
         message: "Invalid player token",
       });
@@ -56,7 +57,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
 
     // Verify player is in the game
     if (!game.playerIds.includes(playerId)) {
-      await sendMessageToClient(event, connectionId, {
+      await socket.sendMessage(connectionId, {
         action: "error",
         message: "Player is not in this game",
       });
@@ -65,7 +66,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
 
     // Verify player is in the canAct list
     if (!game.canAct.includes(playerId)) {
-      await sendMessageToClient(event, connectionId, {
+      await socket.sendMessage(connectionId, {
         action: "error",
         message: "It is not your turn to act",
       });
@@ -89,7 +90,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
       const player = await playerDatabase.get(playerId);
       if (player) {
         for (const connectionId of player.connectionIds) {
-          await sendMessageToClient(event, connectionId, {
+          await socket.sendMessage(connectionId, {
             type: "set_game",
             data: { game: game },
           });
@@ -100,7 +101,7 @@ export const doActionHandler = async (event: APIGatewayEvent) => {
     return successResponse("Action received");
   } catch (error) {
     console.error("Error performing action:", error);
-    await sendMessageToClient(event, connectionId, {
+    await socket.sendMessage(connectionId, {
       action: "error",
       message: "Error performing action",
     });

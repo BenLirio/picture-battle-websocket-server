@@ -8,7 +8,7 @@ import { Game } from "../schemas/gameSchema";
 import { v4 as uuidv4 } from "uuid";
 import { gameDatabase } from "../database/gameDatabase";
 import { connectionDatabase } from "../database/connectionDatabase";
-import { sendMessageToClient } from "../utils/messageUtils";
+import { Socket } from "../socket/Socket";
 
 export const createGameHandler = withErrorHandling(
   async (
@@ -16,6 +16,7 @@ export const createGameHandler = withErrorHandling(
     context: Context
   ): Promise<APIGatewayProxyResult> => {
     const connectionId = event.requestContext.connectionId!;
+    const socket: Socket = new Socket(event);
     const game: Game = {
       id: uuidv4(),
       playerIds: [],
@@ -30,7 +31,7 @@ export const createGameHandler = withErrorHandling(
     const connectionIds = await connectionDatabase.listIds();
 
     for (const connectionId of connectionIds) {
-      await sendMessageToClient(event, connectionId, {
+      await socket.sendMessage(connectionId, {
         type: "game_created",
         gameId: game.id,
       });

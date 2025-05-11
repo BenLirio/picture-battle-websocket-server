@@ -11,9 +11,9 @@ import {
 import { z } from "zod";
 import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
-import { sendMessageToClient } from "../utils/messageUtils";
 import { characterDatabase } from "../database/characterDatabase";
 import { v4 as uuidv4 } from "uuid";
+import { Socket } from "../socket/Socket";
 
 const SelectCharacterRequestSchema = z.object({
   action: z.literal("selectCharacter"),
@@ -34,6 +34,7 @@ export const selectCharacterHandler = withErrorHandling(
     const {
       data: { gameId, playerId, playerToken, characterName },
     } = SelectCharacterRequestSchema.parse(JSON.parse(event.body!));
+    const socket: Socket = new Socket(event);
 
     const game = await gameDatabase.get(gameId);
     if (!game) {
@@ -102,7 +103,7 @@ export const selectCharacterHandler = withErrorHandling(
       const gamePlayer = await playerDatabase.get(pId);
       if (gamePlayer) {
         for (const connId of gamePlayer.connectionIds) {
-          await sendMessageToClient(event, connId, {
+          await socket.sendMessage(connId, {
             type: "set_game",
             data: { game },
           });

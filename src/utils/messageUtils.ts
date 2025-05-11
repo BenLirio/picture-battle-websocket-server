@@ -19,30 +19,3 @@ export function getApiGatewayManagementApi(
     endpoint: endpoint,
   });
 }
-
-export const sendMessageToClient = async (
-  event: APIGatewayProxyEvent,
-  connectionId: string,
-  data: any
-) => {
-  const apigwManagementApi = getApiGatewayManagementApi(event);
-  try {
-    await apigwManagementApi
-      .postToConnection({
-        ConnectionId: connectionId,
-        Data: JSON.stringify(data),
-      })
-      .promise();
-    console.log(`Successfully sent message to connectionId: ${connectionId}`);
-  } catch (error: any) {
-    if (error.statusCode === 410) {
-      console.log(`Connection ${connectionId} is stale and has been deleted.`);
-      await connectionDatabase.delete(connectionId);
-    } else {
-      console.error(
-        `Failed to send message to connectionId: ${connectionId}`,
-        error
-      );
-    }
-  }
-};

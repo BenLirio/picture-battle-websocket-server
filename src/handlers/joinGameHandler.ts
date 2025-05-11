@@ -12,7 +12,7 @@ import { z } from "zod";
 import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
 import { connectionDatabase } from "../database/connectionDatabase";
-import { sendMessageToClient } from "../utils/messageUtils";
+import { Socket } from "../socket/Socket";
 
 const JoinGameRequestSchema = z.object({
   action: z.literal("joinGame"),
@@ -29,6 +29,7 @@ export const joinGameHandler = withErrorHandling(
     event: APIGatewayProxyEvent,
     context: Context
   ): Promise<APIGatewayProxyResult> => {
+    const socket: Socket = new Socket(event);
     const connectionId = event.requestContext.connectionId!;
     const {
       data: { gameId, playerId, playerToken },
@@ -62,7 +63,7 @@ export const joinGameHandler = withErrorHandling(
       game.canAct = [...game.playerIds]; // Add both player IDs to canAct
       const connectionIds = await connectionDatabase.listIds();
       for (const connectionId of connectionIds) {
-        await sendMessageToClient(event, connectionId, {
+        await socket.sendMessage(connectionId, {
           type: "game_no_longer_available",
           gameId: game.id,
         });
@@ -72,7 +73,7 @@ export const joinGameHandler = withErrorHandling(
       const player = await playerDatabase.get(playerId);
       if (player) {
         for (const connectionId of player.connectionIds) {
-          await sendMessageToClient(event, connectionId, {
+          await socket.sendMessage(connectionId, {
             type: "set_game",
             data: { game: game },
           });

@@ -3,16 +3,12 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandling,
-} from "../utils/responseUtils";
+import { successResponse, withErrorHandling } from "../utils/responseUtils";
 import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
 import { v4 as uuidv4 } from "uuid";
 import { Player } from "../schemas/playerSchema";
-import { sendMessageToClient } from "../utils/messageUtils";
+import { Socket } from "../socket/Socket";
 
 export const initHandler = withErrorHandling(
   async (
@@ -25,6 +21,7 @@ export const initHandler = withErrorHandling(
       connectionIds: [connectionId],
       token: uuidv4(),
     };
+    const socket: Socket = new Socket(event);
     await playerDatabase.create(player);
     const gameIds = await gameDatabase.listIds({
       attributeName: "state",
@@ -33,7 +30,7 @@ export const initHandler = withErrorHandling(
       value: "WAITING_FOR_PLAYERS",
     });
 
-    await sendMessageToClient(event, connectionId, {
+    await socket.sendMessage(connectionId, {
       type: "set_player",
       data: {
         playerId: player.id,
@@ -41,7 +38,7 @@ export const initHandler = withErrorHandling(
       },
     });
 
-    await sendMessageToClient(event, connectionId, {
+    await socket.sendMessage(connectionId, {
       type: "game_ids",
       data: {
         gameIds,

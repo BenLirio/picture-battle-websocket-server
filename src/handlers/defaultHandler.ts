@@ -3,11 +3,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandling,
-} from "../utils/responseUtils";
+import { successResponse, withErrorHandling } from "../utils/responseUtils";
 
 export const defaultHandler = withErrorHandling(
   async (
