@@ -8,7 +8,7 @@ import { Game } from "../schemas/gameSchema";
 import { v4 as uuidv4 } from "uuid";
 import { gameDatabase } from "../database/gameDatabase";
 import { connectionDatabase } from "../database/connectionDatabase";
-import { Socket } from "../socket/Socket";
+import { Socket } from "../connections/Socket";
 
 export const createGameHandler = withErrorHandling(
   async (

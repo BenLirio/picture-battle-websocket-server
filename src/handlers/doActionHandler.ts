@@ -2,7 +2,7 @@ import { APIGatewayEvent } from "aws-lambda";
 import { gameDatabase, playerDatabase } from "../database";
 import { successResponse, errorResponse } from "../utils/responseUtils";
 import { z } from "zod";
-import { Socket } from "../socket/Socket";
+import { Socket } from "../connections/Socket";
 
 const DoActionInputSchema = z.object({
   action: z.literal("doAction"),

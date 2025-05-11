@@ -12,7 +12,7 @@ import { z } from "zod";
 import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
 import { connectionDatabase } from "../database/connectionDatabase";
-import { Socket } from "../socket/Socket";
+import { Socket } from "../connections/Socket";
 
 const JoinGameRequestSchema = z.object({
   action: z.literal("joinGame"),

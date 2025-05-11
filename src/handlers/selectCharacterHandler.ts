@@ -13,7 +13,7 @@ import { gameDatabase } from "../database/gameDatabase";
 import { playerDatabase } from "../database/playerDatabase";
 import { characterDatabase } from "../database/characterDatabase";
 import { v4 as uuidv4 } from "uuid";
-import { Socket } from "../socket/Socket";
+import { Socket } from "../connections/Socket";
 
 const SelectCharacterRequestSchema = z.object({
   action: z.literal("selectCharacter"),
