@@ -82,6 +82,29 @@ export class DatabaseClient<T> {
     return result.Items.map((item) => item.id);
   }
 
+  async update(item: T & { id: string }): Promise<void> {
+    const params: AWS.DynamoDB.DocumentClient.UpdateItemInput = {
+      TableName: this.tableName,
+      Key: { id: item.id },
+      UpdateExpression:
+        "SET " +
+        Object.keys(item)
+          .filter((key) => key !== "id")
+          .map((key) => `#${key} = :${key}`)
+          .join(", "),
+      ExpressionAttributeNames: Object.keys(item)
+        .filter((key) => key !== "id")
+        .reduce((acc, key) => ({ ...acc, [`#${key}`]: key }), {}),
+      ExpressionAttributeValues: Object.keys(item)
+        .filter((key) => key !== "id")
+        .reduce(
+          (acc, key) => ({ ...acc, [`:${key}`]: (item as any)[key] }),
+          {}
+        ),
+    };
+    await ddb.update(params).promise();
+  }
+
   async delete(id: string): Promise<void> {
     const params = {
       TableName: this.tableName,

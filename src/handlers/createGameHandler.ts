@@ -18,6 +18,9 @@ export const createGameHandler = async (
     id: uuidv4(),
     playerIds: [],
     state: "WAITING_FOR_PLAYERS",
+    settings: {
+      maxPlayers: 2,
+    },
   };
   await gameDatabase.create(game);
   const apigwManagementApi = getApiGatewayManagementApi(event);
