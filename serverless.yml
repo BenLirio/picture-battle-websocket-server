@@ -38,6 +38,12 @@ functions:
       - websocket:
           route: echo
 
+  initHandler:
+    handler: src/handlers/index.initHandler
+    events:
+      - websocket:
+          route: init
+
   createGameHandler:
     handler: src/handlers/index.createGameHandler
     events:

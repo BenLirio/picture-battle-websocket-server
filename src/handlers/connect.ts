@@ -3,17 +3,20 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import { connectionDatabase } from "../database/connection";
+import { connectionDatabase } from "../database/connectionDatabase";
+import { Connection } from "../schemas/connection";
 
 export const connect = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
   console.log("Connect event requestContext:", event.requestContext);
-  await connectionDatabase.createConnection({
-    id: event.requestContext.connectionId!,
+  const connectionId = event.requestContext.connectionId!;
+  const connection: Connection = {
+    id: connectionId,
     createdAt: new Date().toISOString(),
-  });
+  };
+  await connectionDatabase.createConnection(connection);
   return {
     statusCode: 200,
     body: "Connected.",

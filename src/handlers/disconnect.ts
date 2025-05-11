@@ -3,7 +3,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import { connectionDatabase } from "../database/connection";
+import { connectionDatabase } from "../database/connectionDatabase";
 
 export const disconnect = async (
   event: APIGatewayProxyEvent,
