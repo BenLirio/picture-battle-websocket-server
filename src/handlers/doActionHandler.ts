@@ -1,5 +1,5 @@
 import { APIGatewayEvent } from "aws-lambda";
-import { gameDatabase, playerDatabase } from "../database";
+import { characterDatabase, gameDatabase, playerDatabase } from "../database";
 import {
   successResponse,
   errorResponse,
@@ -8,6 +8,8 @@ import {
 import { z } from "zod";
 import { Socket } from "../connections/Socket";
 import { GameSocket } from "../connections/GameSocket";
+import { completeConversation } from "../ai/gemeni";
+import { error } from "console";
 
 const DoActionInputSchema = z.object({
   action: z.literal("doAction"),
@@ -66,11 +68,48 @@ export const doActionHandler = withErrorHandling(
     game.messages.push({
       from: playerId,
       message: action,
+      tags: ["action"],
     });
+    game.canAct = [];
     await gameSocket.updateGame();
 
     const nextPlayerId = game.playerIds.find((id) => id !== playerId)!;
     game.canAct = [nextPlayerId];
+
+    const characterDescriptions = await Promise.all(
+      game.characters.map(async ({ playerId, characterId }) => {
+        const { description } = (await characterDatabase.get(characterId))!;
+        return { playerId, description };
+      })
+    );
+    const idToDescriptionMap = Object.fromEntries(
+      characterDescriptions.map(({ playerId, description }) => [
+        playerId,
+        description,
+      ])
+    );
+
+    const response = await completeConversation(
+      game.messages
+        .filter(
+          ({ tags }) =>
+            tags.includes("action") ||
+            tags.includes("scene") ||
+            tags.includes("result")
+        )
+        .map(({ message, from, tags }) => ({
+          role: tags.includes("result") ? "model" : "user",
+          text: idToDescriptionMap[from]
+            ? `${idToDescriptionMap[from]}: ${message}`
+            : message,
+        }))
+    );
+    game.messages.push({
+      from: game.id,
+      message: response,
+      tags: ["result"],
+    });
+    gameSocket.updateGame();
 
     if (action === "win") {
       game.state = "GAME_OVER";
@@ -78,10 +117,11 @@ export const doActionHandler = withErrorHandling(
       game.messages.push({
         from: game.id,
         message: `Player ${playerId} has won the game!`,
+        tags: ["info"],
       });
+      await gameSocket.updateGame();
     }
 
-    await gameSocket.updateGame();
     await gameDatabase.update(game);
 
     return successResponse("Action received");

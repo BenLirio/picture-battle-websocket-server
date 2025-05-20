@@ -19,6 +19,7 @@ functions:
     handler: src/handlers/index.connect
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:
@@ -28,6 +29,7 @@ functions:
     handler: src/handlers/index.disconnect
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:
@@ -37,6 +39,7 @@ functions:
     handler: src/handlers/index.defaultHandler
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:
@@ -46,6 +49,7 @@ functions:
     handler: src/handlers/index.initHandler
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:
@@ -55,6 +59,7 @@ functions:
     handler: src/handlers/index.createGameHandler
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:
@@ -64,6 +69,7 @@ functions:
     handler: src/handlers/index.joinGameHandler
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:
@@ -73,6 +79,7 @@ functions:
     handler: src/handlers/index.selectCharacterHandler
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:
@@ -82,6 +89,7 @@ functions:
     handler: src/handlers/index.doActionHandler
     environment:
       GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     timeout: 29
     events:
       - websocket:

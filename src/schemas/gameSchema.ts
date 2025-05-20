@@ -27,6 +27,7 @@ export const GameSchema = z.object({
     z.object({
       from: z.string().uuid(),
       message: z.string(),
+      tags: z.array(z.enum(["action", "scene", "result", "info"])),
     })
   ),
 });

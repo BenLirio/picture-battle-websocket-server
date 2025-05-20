@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Socket } from "../connections/Socket";
 import { GameSocket } from "../connections/GameSocket";
 import { generateGameScene } from "../ai/mockAi";
+import { ActionHelper } from "../helper/ActionHelper";
 
 const SelectCharacterRequestSchema = z.object({
   action: z.literal("selectCharacter"),
@@ -86,27 +87,37 @@ export const selectCharacterHandler = withErrorHandling(
     game.canAct = game.canAct.filter((id) => id !== playerId);
     game.messages.push({
       from: game.id,
-      message: `Player ${playerId} has selected character "${characterName}".`,
+      message: `Player ${playerId} has selected their character and is ready to play.`,
+      tags: ["info"],
     });
     game.characters.push({ playerId, characterId: newCharacterId });
     gameSocket.updateGame();
+    await characterDatabase.create(newCharacter);
 
     // Check if all players have selected a character
     const inGameLoop = game.characters.length === game.playerIds.length;
     if (inGameLoop) {
-      game.state = "GAME_LOOP";
+      const { characters } = game;
+      const characterDescriptions = await Promise.all(
+        characters.map(async ({ playerId, characterId }) => {
+          const { description } = (await characterDatabase.get(characterId))!;
+          return { playerId, description };
+        })
+      );
       game.messages.push({
         from: game.id,
-        message:
-          "All players have selected their characters. The game is starting...",
+        message: `Game is starting with the following characters: ${JSON.stringify(
+          characterDescriptions
+        )}`,
+        tags: ["info"],
       });
-      const randomIndex = Math.floor(Math.random() * game.playerIds.length);
-      game.canAct = [game.playerIds[randomIndex]];
+      game.state = "GAME_LOOP";
+      const actionHelper = new ActionHelper(gameSocket, game);
+      await actionHelper.setupValidActions();
       await gameSocket.updateGame();
     }
 
     await gameDatabase.update(game);
-    await characterDatabase.create(newCharacter);
 
     return successResponse("Character selected successfully.");
   }

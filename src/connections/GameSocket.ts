@@ -26,6 +26,17 @@ export class GameSocket {
     );
   }
 
+  public async sendToPlayer(playerId: string, message: any) {
+    const player = await playerDatabase.get(playerId);
+    if (player) {
+      await Promise.all(
+        player.connectionIds.map(async (connectionId) => {
+          await this.socket.sendMessage(connectionId, message);
+        })
+      );
+    }
+  }
+
   public async updateGame() {
     await this.broadcastToGame({
       type: "set_game",

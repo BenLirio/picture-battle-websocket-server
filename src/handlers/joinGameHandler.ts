@@ -67,6 +67,7 @@ export const joinGameHandler = withErrorHandling(
     game.messages.push({
       from: game.id,
       message: `Player ${player.id} has joined.`,
+      tags: ["info"],
     });
     await gameSocket.updateGame();
 
@@ -79,16 +80,29 @@ export const joinGameHandler = withErrorHandling(
       });
       game.messages.push({
         from: game.id,
-        message: `Game is full. Starting character selection...`,
+        message: `Game is now full.`,
+        tags: ["info"],
       });
       game.state = "SELECTING_CHARACTERS";
-      await gameSocket.updateGame();
-      const scene = await complete(
-        "Generate a scene for a duel between two characters in a game. The scene should be exciting and engaging, with a clear setting and atmosphere. Your answer should be a single sentence."
-      );
       game.messages.push({
         from: game.id,
-        message: `The scene for this duel is: ${scene}`,
+        message: "The Scene of the duel is...",
+        tags: [],
+      });
+      await gameSocket.updateGame();
+      // const scene = await complete(
+      //   "Generate a scene for a duel between two characters in a game. The scene should be exciting and engaging, with a clear setting and atmosphere. Your answer should be a single sentence."
+      // );
+      const scene = await generateGameScene();
+      game.messages.push({
+        from: game.id,
+        message: scene,
+        tags: ["scene"],
+      });
+      game.messages.push({
+        from: game.id,
+        message: "select your character",
+        tags: ["info"],
       });
       game.canAct = [...game.playerIds];
       await gameSocket.updateGame();
