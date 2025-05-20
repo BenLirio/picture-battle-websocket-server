@@ -10,6 +10,7 @@ import { Socket } from "../connections/Socket";
 import { GameSocket } from "../connections/GameSocket";
 import { completeConversation } from "../ai/gemeni";
 import { error } from "console";
+import { ActionHelper } from "../helper/ActionHelper";
 
 const DoActionInputSchema = z.object({
   action: z.literal("doAction"),
@@ -17,14 +18,14 @@ const DoActionInputSchema = z.object({
     gameId: z.string().uuid(),
     playerId: z.string().uuid(),
     playerToken: z.string().uuid(),
-    action: z.string(),
+    actionIndex: z.number(),
   }),
 });
 
 export const doActionHandler = withErrorHandling(
   async (event: APIGatewayEvent) => {
     const {
-      data: { gameId, playerId, playerToken, action },
+      data: { gameId, playerId, playerToken, actionIndex },
     } = DoActionInputSchema.parse(JSON.parse(event.body!));
     const connectionId = event.requestContext.connectionId;
 
@@ -65,64 +66,9 @@ export const doActionHandler = withErrorHandling(
       return errorResponse("Invalid game state for action");
     }
 
-    game.messages.push({
-      from: playerId,
-      message: action,
-      tags: ["action"],
-    });
-    game.canAct = [];
-    await gameSocket.updateGame();
+    const actionHelper = new ActionHelper(gameSocket, game);
 
-    const nextPlayerId = game.playerIds.find((id) => id !== playerId)!;
-    game.canAct = [nextPlayerId];
-
-    const characterDescriptions = await Promise.all(
-      game.characters.map(async ({ playerId, characterId }) => {
-        const { description } = (await characterDatabase.get(characterId))!;
-        return { playerId, description };
-      })
-    );
-    const idToDescriptionMap = Object.fromEntries(
-      characterDescriptions.map(({ playerId, description }) => [
-        playerId,
-        description,
-      ])
-    );
-
-    const response = await completeConversation(
-      game.messages
-        .filter(
-          ({ tags }) =>
-            tags.includes("action") ||
-            tags.includes("scene") ||
-            tags.includes("result")
-        )
-        .map(({ message, from, tags }) => ({
-          role: tags.includes("result") ? "model" : "user",
-          text: idToDescriptionMap[from]
-            ? `${idToDescriptionMap[from]}: ${message}`
-            : message,
-        }))
-    );
-    game.messages.push({
-      from: game.id,
-      message: response,
-      tags: ["result"],
-    });
-    gameSocket.updateGame();
-
-    if (action === "win") {
-      game.state = "GAME_OVER";
-      game.canAct = [];
-      game.messages.push({
-        from: game.id,
-        message: `Player ${playerId} has won the game!`,
-        tags: ["info"],
-      });
-      await gameSocket.updateGame();
-    }
-
-    await gameDatabase.update(game);
+    actionHelper.executeAction(playerId, actionIndex);
 
     return successResponse("Action received");
   }

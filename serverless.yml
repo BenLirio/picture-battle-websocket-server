@@ -10,6 +10,7 @@ provider:
     GAME_TABLE_NAME: picture-battle-games
     CONNECTION_TABLE_NAME: picture-battle-connections
     PLAYER_TABLE_NAME: picture-battle-players
+    ACTION_TABLE_NAME: picture-battle-actions
 
 plugins:
   - serverless-offline

@@ -22,6 +22,12 @@ export const GameSchema = z.object({
       characterId: z.string().uuid(),
     })
   ),
+  actions: z.array(
+    z.object({
+      playerId: z.string().uuid(),
+      actionId: z.string().uuid(),
+    })
+  ),
   canAct: z.array(z.string().uuid()),
   messages: z.array(
     z.object({
